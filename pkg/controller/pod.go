@@ -365,16 +365,10 @@ func (c *Controller) handleAddPod(key string) error {
 			pod.Annotations[util.LogicalSwitchAnnotation] = subnet.Name
 			pod.Annotations[util.AllocatedAnnotation] = "true"
 
-			go func() {
-				if _, err = c.config.KubeClient.CoreV1().Pods(namespace).Patch(name, types.JSONPatchType, generatePatchPayload(pod.Annotations, op)); err != nil {
-					klog.Errorf("patch pod %s/%s failed %v", name, namespace, err)
-					if pod.Annotations[util.IpPoolAnnotation] != "" {
-						c.addSubnetQueue.AddRateLimited(key)
-					} else {
-						c.addPodQueue.AddRateLimited(key)
-					}
-				}
-			}()
+			if _, err = c.config.KubeClient.CoreV1().Pods(namespace).Patch(name, types.JSONPatchType, generatePatchPayload(pod.Annotations, op)); err != nil {
+				klog.Errorf("patch pod %s/%s failed %v", name, namespace, err)
+				return err
+			}
 		}
 	}
 
@@ -521,6 +515,9 @@ func (c *Controller) setPodStaticIP(pod *v1.Pod) error {
 
 	var staticIP string
 	ipPool := strings.Split(pod.Annotations[util.IpPoolAnnotation], ",")
+	for i, ip := range ipPool {
+		ipPool[i] = strings.TrimSpace(ip)
+	}
 	if isStateful, _ := isStatefulSetPod(pod); isStateful {
 		numIndex := len(strings.Split(pod.Name, "-")) - 1
 		numStr := strings.Split(pod.Name, "-")[numIndex]
@@ -530,6 +527,7 @@ func (c *Controller) setPodStaticIP(pod *v1.Pod) error {
 		}
 	} else {
 		for _, ip := range ipPool {
+			cache.WaitForCacheSync(nil, c.podsSynced)
 			existPods, err := c.podsLister.List(labels.Everything())
 			if err != nil {
 				klog.Errorf("failed to list pod %v", err)

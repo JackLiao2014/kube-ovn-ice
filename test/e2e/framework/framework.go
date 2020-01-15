@@ -6,6 +6,7 @@ import (
 	clientset "github.com/alauda/kube-ovn/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"strings"
@@ -104,7 +105,44 @@ func (f *Framework) WaitDeploymentReady(deployment, namespace string) error {
 			continue
 		}
 
-		pods, err := f.KubeClientSet.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: deploy.Spec.Selector.String()})
+		pods, err := f.KubeClientSet.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labels.SelectorFromSet(deploy.Spec.Template.Labels).String()})
+		if err != nil {
+			return err
+		}
+
+		ready := true
+		for _, pod := range pods.Items {
+			switch getPodStatus(&pod) {
+			case Completed:
+				return fmt.Errorf("pod already completed")
+			case Running:
+				continue
+			case Initing, Pending, PodInitializing, ContainerCreating, Terminating:
+				ready = false
+				break
+			default:
+				fmt.Printf("%v", pod.String())
+				return fmt.Errorf("pod status failed")
+			}
+		}
+		if ready {
+			return nil
+		}
+	}
+}
+
+func (f *Framework) WaitStatefulsetReady(statefulset, namespace string) error {
+	for {
+		time.Sleep(1 * time.Second)
+		ss, err := f.KubeClientSet.AppsV1().StatefulSets(namespace).Get(statefulset, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+		if ss.Status.ReadyReplicas != *ss.Spec.Replicas {
+			continue
+		}
+
+		pods, err := f.KubeClientSet.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: labels.SelectorFromSet(ss.Spec.Template.Labels).String()})
 		if err != nil {
 			return err
 		}
