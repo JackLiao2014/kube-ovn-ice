@@ -6,6 +6,7 @@ import (
 	"github.com/alauda/kube-ovn/test/e2e/framework"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
@@ -61,6 +62,51 @@ var _ = Describe("[IP Allocation]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ip.Spec.IPAddress).To(Equal("12.10.0.10"))
 			Expect(ip.Spec.MacAddress).To(Equal("00:00:00:53:6B:B6"))
+		})
+
+		It("deployment with ippool", func() {
+			name := f.GetName()
+			var replicas int32 = 3
+			autoMount := false
+			deployment := appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: name,
+					Namespace: namespace,
+				},
+				Spec: appsv1.DeploymentSpec{
+					Replicas:                &replicas,
+					Selector:                &metav1.LabelSelector{MatchLabels: map[string]string{"apps": "name"}},
+					Template:                corev1.PodTemplateSpec{
+						ObjectMeta: metav1.ObjectMeta{
+							Annotations: map[string]string{
+								util.IpPoolAnnotation: "12.10.0.20, 12.10.0.21, 12.10.0.22",
+							},
+						},
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  name,
+									Image: "index.alauda.cn/library/nginx:alpine",
+								},
+							},
+							AutomountServiceAccountToken: &autoMount,
+						},
+					},
+				},
+			}
+
+			By("Create deployment")
+			_, err := f.KubeClientSet.AppsV1().Deployments(namespace).Create(&deployment)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = f.WaitDeploymentReady(name, namespace)
+			Expect(err).NotTo(HaveOccurred())
+
+			pods, err := f.KubeClientSet.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: deployment.Spec.Selector.String()})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pods.Items).To(HaveLen(3))
+
+
 		})
 	})
 })
