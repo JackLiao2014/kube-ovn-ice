@@ -14,20 +14,22 @@ RUN yum install -y  \
         yum clean all
 
 ENV OVS_VERSION=2.12.0
-ENV OVS_SUBVERSION=4
+ENV OVS_SUBVERSION=1
 
-RUN rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/openvswitch-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
-    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/openvswitch-devel-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
-    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
-    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-vtep-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
-    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-central-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
-    rpm -ivh https://github.com/alauda/ovs/releases/download/${OVS_VERSION}-${OVS_SUBVERSION}/ovn-host-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm
+RUN rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/openvswitch-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/openvswitch-devel-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/ovn-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/ovn-vtep-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/ovn-central-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm && \
+    rpm -ivh https://code.aliyun.com/liaoqc/kubespray-2.11.0/raw/master/ovn-host-${OVS_VERSION}-${OVS_SUBVERSION}.el7.x86_64.rpm
 
 RUN mkdir -p /var/run/openvswitch
 WORKDIR /kube-ovn
 
-CMD ["sh", "start-controller.sh"]
-
 COPY start-controller.sh /kube-ovn/start-controller.sh
 COPY kube-ovn-controller-healthcheck.sh /kube-ovn/kube-ovn-controller-healthcheck.sh
 COPY kube-ovn-controller /kube-ovn/kube-ovn-controller
+RUN chmod +x /kube-ovn/start-controller.sh
+RUN chmod +x /kube-ovn/kube-ovn-controller-healthcheck.sh
+
+CMD ["sh", "start-controller.sh"]
