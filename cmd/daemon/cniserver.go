@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	_ "net/http/pprof"
 	"time"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	kubeovninformer "github.com/alauda/kube-ovn/pkg/client/informers/externalversions"
 	"github.com/alauda/kube-ovn/pkg/daemon"

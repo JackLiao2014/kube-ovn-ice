@@ -3,18 +3,19 @@ package pinger
 import (
 	"context"
 	"fmt"
-	"github.com/alauda/kube-ovn/pkg/util"
-	goping "github.com/sparrc/go-ping"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/klog"
 	"math"
 	"net"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/alauda/kube-ovn/pkg/util"
+	goping "github.com/sparrc/go-ping"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/klog"
 )
 
 func StartPinger(config *Configuration) {
@@ -151,7 +152,7 @@ func pingExternal(config *Configuration) {
 func nslookup(config *Configuration) {
 	klog.Infof("start to check dns connectivity")
 	t1 := time.Now()
-	ctx, cancel := context.WithTimeout(context.TODO(), 10 * time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
 	defer cancel()
 	var r net.Resolver
 	addrs, err := r.LookupHost(ctx, config.DNS)

@@ -52,7 +52,7 @@ type Controller struct {
 	ipSetsV6Mgr   *ipsets.IPSets
 	iptablesV6Mgr *iptables.IPTables
 
-	protocol      string
+	protocol string
 }
 
 // NewController init a daemon controller
@@ -349,8 +349,8 @@ func (c *Controller) Run(stopCh <-chan struct{}) error {
 		return err
 	}
 	c.protocol = util.CheckProtocol(node.Annotations[util.IpAddressAnnotation])
-	go wait.Until(recompute, 10 * time.Minute, stopCh)
-	go wait.Until(c.runGateway, 3 * time.Second, stopCh)
+	go wait.Until(recompute, 10*time.Minute, stopCh)
+	go wait.Until(c.runGateway, 3*time.Second, stopCh)
 
 	klog.Info("Started workers")
 	<-stopCh

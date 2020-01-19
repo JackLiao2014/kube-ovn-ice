@@ -1,9 +1,9 @@
 GOFILES_NOVENDOR=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 GO_VERSION=1.13
 
-REGISTRY=index.alauda.cn/alaudak8s
+REGISTRY=172.20.70.79:5000
 ROLES=node controller cni db webhook pinger
-DEV_TAG=dev
+DEV_TAG=dev0119
 RELEASE_TAG=$(shell cat VERSION)
 
 .PHONY: build-dev-images build-go build-bin test lint up down halt suspend resume kind

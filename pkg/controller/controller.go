@@ -2,10 +2,11 @@ package controller
 
 import (
 	"fmt"
-	"github.com/alauda/kube-ovn/pkg/util"
-	"k8s.io/apimachinery/pkg/labels"
 	"strings"
 	"time"
+
+	"github.com/alauda/kube-ovn/pkg/util"
+	"k8s.io/apimachinery/pkg/labels"
 
 	kubeovninformer "github.com/alauda/kube-ovn/pkg/client/informers/externalversions"
 	kubeovnlister "github.com/alauda/kube-ovn/pkg/client/listers/kube-ovn/v1"
@@ -439,7 +440,7 @@ func (c *Controller) gcLogicalSwitchPort() error {
 		klog.Errorf("failed to list node, %v", err)
 		return err
 	}
-	ipNames := make([]string, 0, len(pods) + len(nodes))
+	ipNames := make([]string, 0, len(pods)+len(nodes))
 	for _, pod := range pods {
 		ipNames = append(ipNames, fmt.Sprintf("%s.%s", pod.Name, pod.Namespace))
 	}
